@@ -11,8 +11,8 @@ post_install_actions:
 
 post_start:
   - name: Clone private repo if not present
-    exec_host: false
+    exec_host: true
     command: |
-      if [ ! -d /var/www/html/e2e-testing ]; then
-        git clone git@gitlab.vcat.de:vcat/e2e-testing.git /var/www/html/
-      fi
+      ddev exec bash -c 'if [ ! -d /var/www/html/e2e-testing ]; then
+        git clone git@gitlab.vcat.de:vcat/e2e-testing.git /var/www/html/e2e-testing
+      fi'
