@@ -2,7 +2,9 @@
 services:
   e2e-testing:
     container_name: ddev-${DDEV_SITENAME}-e2e-testing
-    image: ${E2E_TESTING_DOCKER_IMAGE:-ddev/ddev-utilities:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile.e2e
     command: tail -f /dev/null
     restart: "no"
     # These labels ensure this service is discoverable by DDEV.
@@ -11,5 +13,4 @@ services:
       com.ddev.approot: ${DDEV_APPROOT}
 
     volumes:
-      - ".:/mnt/ddev_config"
-      - "ddev-global-cache:/mnt/ddev-global-cache"
+      - ".:/var/www/html"
