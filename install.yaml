@@ -2,6 +2,7 @@ name: e2e-testing
 
 project_files:
   - docker-compose.e2e-testing.yaml
+  - config.e2e-testing.yaml
   - Dockerfile.e2e
 
 ddev_version_constraint: '>= v1.24.3'
