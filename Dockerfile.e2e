@@ -1,8 +1,36 @@
-FROM alpine:latest
+FROM node:20-bookworm
 
-# Make sure we have an image with fundamental utilities in it
-# base64 is already in alpine.
-# perl-utils provides shasum
-# We get perl with perl-utils
-RUN apk update && apk add --no-cache bash curl jq perl-utils wget yq openssh npm git
-CMD [ "bash" ]
+# System-CA-Tools
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+# Playwright + Browser installieren
+RUN npx -y playwright@1.56.1 install --with-deps
+
+# Entrypoint-Skript: sucht automatisch nach mkcert-CA im Host-Mount
+RUN printf '%s\n' \
+'#!/usr/bin/env bash' \
+'set -e' \
+'# Prüfe verschiedene Pfade, unter denen mkcert-Root-CA liegen kann' \
+'for path in /mnt/ddev-global-cache/mkcert /root/.local/share/mkcert /mkcert "$HOME/.local/share/mkcert" "/Library/Application Support/mkcert"; do' \
+'  if [ -f "$path/rootCA.pem" ]; then' \
+'    echo "→ Importiere mkcert-Root-CA aus $path"' \
+'    install -m 0644 "$path/rootCA.pem" /usr/local/share/ca-certificates/mkcert-rootCA.crt' \
+'    update-ca-certificates || true' \
+'    break' \
+'  fi' \
+'done' \
+'exec "$@"' \
+> /usr/local/bin/entrypoint-with-ca.sh \
+ && chmod +x /usr/local/bin/entrypoint-with-ca.sh
+
+# 👇 Wichtig: Chromium/Node zeigen explizit auf den System-Truststore
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_DIR=/etc/ssl/certs
+# Falls du zusätzlich Node-HTTP-Clients nutzt:
+ENV NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/mkcert-rootCA.crt
+
+WORKDIR /var/www/html
+ENTRYPOINT ["/usr/local/bin/entrypoint-with-ca.sh"]
+CMD ["bash"]

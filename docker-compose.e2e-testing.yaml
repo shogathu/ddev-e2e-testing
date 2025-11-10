@@ -14,5 +14,6 @@ services:
     # These labels ensure this service is discoverable by DDEV.
     volumes:
       - "${DDEV_APPROOT}/e2e-testing:/var/www/html"
+      - "/mnt/ddev-global-cache/mkcert:/mnt/ddev-global-cache/mkcert:ro"
     x-ddev:
       ssh-shell: bash
