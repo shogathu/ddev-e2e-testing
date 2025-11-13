@@ -1,4 +1,5 @@
-#ddev-generated
+version: "3.6"
+
 services:
   e2e-testing:
     container_name: ddev-${DDEV_SITENAME}-e2e-testing
@@ -11,9 +12,21 @@ services:
     command: tail -f /dev/null
     working_dir: /var/www/html
     restart: "no"
-    # These labels ensure this service is discoverable by DDEV.
     volumes:
       - "${DDEV_APPROOT}/e2e-testing:/var/www/html"
-      - "/mnt/ddev-global-cache/mkcert:/mnt/ddev-global-cache/mkcert:ro"
+
+      # DDEV-global-cache (mkcert is here for all DDEV users)
+      - ddev-global-cache:/mnt/ddev-global-cache
+
+      # Your local mkcert folder (Linux example)
+      - "${HOME}/.local/share/mkcert:/mkcert:ro"
+
+      # (optional for macOS)
+      # - "$HOME/Library/Application Support/mkcert:/mkcert-macos:ro"
+
     x-ddev:
       ssh-shell: bash
+
+volumes:
+  ddev-global-cache:
+    external: true
