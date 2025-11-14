@@ -1,6 +1,4 @@
 #ddev-generated
-version: "3.6"
-
 services:
   e2e-testing:
     container_name: ddev-${DDEV_SITENAME}-e2e-testing
@@ -17,7 +15,7 @@ services:
       - "${DDEV_APPROOT}/e2e-testing:/var/www/html"
 
       # DDEV-global-cache (mkcert is here for all DDEV users)
-      - ddev-global-cache:/mnt/ddev-global-cache
+      - "ddev-global-cache:/mnt/ddev-global-cache/mkcert:ro"
 
       # Your local mkcert folder (Linux example)
       - "${HOME}/.local/share/mkcert:/mkcert:ro"

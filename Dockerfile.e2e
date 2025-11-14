@@ -3,6 +3,7 @@ FROM node:20-bookworm
 # System-CA-Tools
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates \
+ && apt-get install -y mc \
  && rm -rf /var/lib/apt/lists/*
 
 # Playwright + Browser installieren

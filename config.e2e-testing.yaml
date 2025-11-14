@@ -2,8 +2,65 @@
 hooks:
   pre-start:
     - exec-host: |
-        if [ ! -f ${DDEV_APPROOT}/.e2e_cloned ]; then
-          git clone git@gitlab.vcat.de:vcat/e2e-testing.git ${DDEV_APPROOT}/e2e-testing && \
-          touch ${DDEV_APPROOT}/.e2e_cloned
+        set -e
+
+        # 1. WordPress
+        if [ -f "${DDEV_APPROOT}/wp-config.php" ]; then
+          PLATFORM="wordpress"
+          REPO="git@gitlab.vcat.de:vcat/e2e-testing-wordpress.git"
+
+        # 2. TYPO3 (new Composer-Setups: public/typo3)
+        elif [ -d "${DDEV_APPROOT}/public/typo3" ] || [ -f "${DDEV_APPROOT}/public/typo3/index.php" ]; then
+          PLATFORM="typo3"
+          REPO="git@gitlab.vcat.de:vcat/e2e-testing-typo3.git"
+
+        # 3. TYPO3 (older Setups: typo3 in docroot)
+        elif [ -d "${DDEV_APPROOT}/typo3" ] || [ -d "${DDEV_APPROOT}/typo3conf" ]; then
+          PLATFORM="typo3"
+          REPO="git@gitlab.vcat.de:vcat/e2e-testing-typo3.git"
+
+        # 4. Symfony
+        elif [ -f "${DDEV_APPROOT}/symfony.lock" ] || [ -f "${DDEV_APPROOT}/bin/console" ]; then
+          PLATFORM="symfony"
+          REPO="git@gitlab.vcat.de:vcat/e2e-testing-symfony.git"
+
+        # 5. vtiger
+        elif [ -f "${DDEV_APPROOT}/vtiger_version.php" ] || [ -d "${DDEV_APPROOT}/vtigercrm" ]; then
+          PLATFORM="vtiger"
+          REPO="git@gitlab.vcat.de:vcat/e2e-testing-vtiger.git"
+
+        # 6. Fallback
+        else
+          PLATFORM="generic"
+          REPO="git@gitlab.vcat.de:vcat/e2e-testing.git"
         fi
 
+        echo "Plattform: ${PLATFORM}"
+        echo "E2E-Repo: ${REPO}"
+        
+        FALLBACK_REPO="git@gitlab.vcat.de:vcat/e2e-testing.git"
+
+        MARKER_NAME=$(echo "${PLATFORM}" | sed 's/[^a-zA-Z0-9]/_/g')
+        CLONE_MARKER="${DDEV_APPROOT}/.e2e_cloned_${MARKER_NAME}"
+
+        if [ ! -f "${CLONE_MARKER}" ]; then
+          echo "E2E-Repo will be newly cloned ..."
+
+          rm -rf "${DDEV_APPROOT}/e2e-testing"
+
+          # Check if the platform repo is reachable
+          echo "Checking reachability of ${REPO} ..."
+        
+          if git ls-remote "${REPO}" >/dev/null 2>&1; then
+            echo "→ Repo reachable, cloning ${REPO}"
+       
+          else
+            echo "⚠ Repo ${REPO} not reachable, using fallback: ${FALLBACK_REPO}"
+            REPO="${FALLBACK_REPO}"
+          fi
+
+          git clone "${REPO}" "${DDEV_APPROOT}/e2e-testing"
+          touch "${CLONE_MARKER}"
+        else
+          echo "E2E-Repo for ${PLATFORM} also present, skipping clone."
+        fi
