@@ -7,7 +7,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # Playwright + Browser installieren
-RUN npx -y playwright@1.56.1 install --with-deps
+RUN npx playwright install --with-deps chromium
 
 # Entrypoint-Skript: sucht automatisch nach mkcert-CA im Host-Mount
 RUN printf '%s\n' \
